@@ -1,0 +1,18 @@
+=============== Aug 12, 2024 (UTC) ===============
+12:55:57.174000 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:55:57.175144 db@open opening
+12:55:57.175409 version@stat F·[] S·0B[] Sc·[]
+12:55:57.177081 db@janitor F·2 G·0
+12:55:57.177096 db@open done T·1.943362ms
+12:55:57.177750 db@close closing
+12:55:57.177781 db@close done T·31.283µs
+=============== Aug 12, 2024 (UTC) ===============
+12:56:10.762636 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+12:56:10.762750 version@stat F·[] S·0B[] Sc·[]
+12:56:10.762767 db@open opening
+12:56:10.762814 journal@recovery F·1
+12:56:10.766720 journal@recovery recovering @1
+12:56:10.768468 memdb@flush created L0@2 N·12 S·889B "\"\xefQ..9\x89\xe3,v2":"sec..R\xe6\xbe,v1"
+12:56:10.771835 version@stat F·[1] S·889B[889B] Sc·[0.25]
+12:56:10.773584 db@janitor F·3 G·0
+12:56:10.773596 db@open done T·10.822516ms
