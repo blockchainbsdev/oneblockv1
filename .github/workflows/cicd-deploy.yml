@@ -33,13 +33,39 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: SSH into the instance and deploy container
+    - name: SSH into the instance, prepare the environment, and deploy container
       run: |
         gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
-        sudo docker pull ${{ secrets.DOCKER_USERNAME }}/oneblock:latest &&
+        # Update and install required packages
+        sudo apt-get update &&
+        sudo apt-get install -y build-essential golang-go &&
+
+        # Navigate to the project directory
+        cd /var/www/oneblockv1 &&
+
+        # Compile the blockchain node
+        make geth &&
+
+        # Verify the build
+        ls build/bin/ &&
+
+        # Initialize the blockchain with the genesis file
+        build/bin/geth --datadir /var/www/oneblockv1/datadir init /var/www/oneblockv1/genesis.json &&
+
+        # Move the binary to the standard bin directory
+        sudo mv build/bin/geth /usr/local/bin/ &&
+
+        # Initialize again using the moved binary
+        geth --datadir /var/www/oneblockv1/datadir init /var/www/oneblockv1/genesis.json &&
+
+        # Stop any running container and remove it
         sudo docker stop oneblock || true &&
         sudo docker rm oneblock || true &&
+
+        # Run the Docker container
         sudo docker run -d --name oneblock \
           -p 8545:8545 -p 30303:30303 \
-          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest --license-key=${{ secrets.DOCKER_LICENSE_KEY }}"
+          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest --license-key=${{ secrets.DOCKER_LICENSE_KEY }} &&
 
+        # Start the blockchain node
+        geth --datadir /var/www/oneblockv1/datadir --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545"
