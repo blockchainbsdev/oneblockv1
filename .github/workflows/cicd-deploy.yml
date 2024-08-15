@@ -33,14 +33,13 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Configure gcloud
+    - name: SSH into the instance and deploy container
       run: |
-        gcloud config set project tugu-blockchain-dev
-        gcloud config set compute/zone asia-southeast2-a
-
-    - name: Update Existing Instance
-      run: |
-        gcloud compute instances update-container blockchain-node1-production \
-          --container-image=${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --container-arg="--license-key=${{ secrets.DOCKER_LICENSE_KEY }}"
+        gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
+        sudo docker pull ${{ secrets.DOCKER_USERNAME }}/oneblock:latest &&
+        sudo docker stop oneblock || true &&
+        sudo docker rm oneblock || true &&
+        sudo docker run -d --name oneblock \
+          -p 8545:8545 -p 30303:30303 \
+          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest --license-key=${{ secrets.DOCKER_LICENSE_KEY }}"
 
