@@ -38,10 +38,12 @@ jobs:
         gcloud config set project tugu-blockchain-dev
         gcloud config set compute/zone asia-southeast2-a
 
-    - name: Update Existing Instance
+    - name: Create New Instance with Container
       run: |
-        gcloud compute instances update-container blockchain-node1-production \
+        gcloud compute instances create-with-container blockchain-node1-production \
           --container-image=${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --container-arg="--license-key=${{ secrets.DOCKER_LICENSE_KEY }}"
+          --container-arg="--license-key=${{ secrets.DOCKER_LICENSE_KEY }}" \
+          --zone=asia-southeast2-a \
+          --tags=http-server,https-server
 
 
