@@ -56,6 +56,12 @@ jobs:
         sudo apt-get update &&
         sudo apt-get install -y geth &&
         
+        # Create the directory if it doesn't exist
+        sudo mkdir -p /var/www/oneblockv1 &&
+        
+        # Set proper permissions
+        sudo chown -R $(whoami):$(whoami) /var/www/oneblockv1 &&
+        
         # Navigate to the project directory
         cd /var/www/oneblockv1 &&
         
@@ -85,4 +91,5 @@ jobs:
         
         # Start the blockchain node
         geth --datadir /var/www/oneblockv1/datadir --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545"
+
 
