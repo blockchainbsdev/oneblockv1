@@ -33,6 +33,15 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "Host *" >> ~/.ssh/config
+        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+        echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+
     - name: SSH into the instance, prepare the environment, and deploy container
       run: |
         gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
@@ -60,4 +69,5 @@ jobs:
           ${{ secrets.DOCKER_USERNAME }}/oneblock:latest --license-key=${{ secrets.DOCKER_LICENSE_KEY }} &&
         # Start the blockchain node
         geth --datadir /var/www/oneblockv1/datadir --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545"
+
 
