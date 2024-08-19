@@ -86,8 +86,8 @@ jobs:
           --http \
           --http.api admin,eth,net,web3 \
           --http.addr 0.0.0.0 \
-          --http.port 8545 \
-          --consensus quorum"
+          --http.port 8545"
+
 
 
 
