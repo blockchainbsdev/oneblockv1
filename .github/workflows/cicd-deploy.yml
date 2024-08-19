@@ -42,14 +42,26 @@ jobs:
         echo "  StrictHostKeyChecking no" >> ~/.ssh/config
         echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
 
-    - name: SSH into the instance, prepare the environment, install geth, and deploy container
+    - name: SSH into the instance, prepare the environment, install Docker, and deploy container
       run: |
         gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
         # Update package lists
         sudo apt-get update &&
         
-        # Install Docker if not already installed
-        sudo apt-get install -y docker.io &&
+        # Remove conflicting packages
+        sudo apt-get remove --purge -y containerd containerd.io &&
+        
+        # Clean up package lists
+        sudo apt-get autoremove -y &&
+        sudo apt-get clean &&
+        sudo apt-get autoclean &&
+        
+        # Install Docker from the official repository
+        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common &&
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
+        sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" &&
+        sudo apt-get update &&
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io &&
         
         # Check if the directory exists
         if [ ! -d /var/www/oneblockv1 ]; then
