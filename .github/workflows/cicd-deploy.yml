@@ -27,6 +27,7 @@ jobs:
         docker build -t admineng/oneblock:latest .
         docker tag admineng/oneblock:latest ${{ secrets.DOCKER_USERNAME }}/oneblock:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/oneblock:latest
+        
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v0.6.0
       with:
@@ -40,6 +41,7 @@ jobs:
         echo "Host *" >> ~/.ssh/config
         echo "  StrictHostKeyChecking no" >> ~/.ssh/config
         echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+
     - name: SSH into the instance, prepare the environment, install Docker, and deploy container
       run: |
         gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
@@ -73,10 +75,8 @@ jobs:
         sudo mkdir -p /var/www/oneblockv1/genesis &&
         echo '${{ secrets.GENESIS_JSON_CONTENT }}' | sudo tee /var/www/oneblockv1/genesis/genesis.json &&
         
-        # Initialize Geth with the genesis block if not already initialized
-        if [ ! -f /root/.ethereum/geth/chaindata/LOCK ]; then
-          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /var/www/oneblockv1/genesis/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
-        fi &&
+        # Initialize Geth with the genesis block using the geth command
+        sudo docker run --rm -v /var/www/oneblockv1:/var/www/oneblockv1 ${{ secrets.DOCKER_USERNAME }}/oneblock:latest geth --datadir /var/www/oneblockv1/datadir init /var/www/oneblockv1/genesis/genesis.json &&
         
         # Stop any running container and remove it
         sudo docker stop oneblock || true &&
@@ -87,7 +87,7 @@ jobs:
           -p 8545:8545 -p 30303:30303 \
           -e LICENSE_KEY=${{ secrets.DOCKER_LICENSE_KEY }} \
           ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --datadir /var/www/oneblockv1/datadir
+          --datadir /var/www/oneblockv1/datadir \
           --networkid 10 \
           --port 30303 \
           --http \
@@ -95,3 +95,4 @@ jobs:
           --http.addr 0.0.0.0 \
           --http.port 8545 \
           --syncmode 'full'"
+
