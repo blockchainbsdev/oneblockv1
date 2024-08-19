@@ -24,8 +24,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        docker build -t admineng/oneblock:latest .
-        docker tag admineng/oneblock:latest ${{ secrets.DOCKER_USERNAME }}/oneblock:latest
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/oneblock:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/oneblock:latest
 
     - name: Authenticate to Google Cloud
@@ -64,19 +63,16 @@ jobs:
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io &&
         
         # Check if the directory exists
-        if [ ! -d /var/www/oneblockv1 ]; then
+        if [ ! -d /var/lib/geth ]; then
           # Create the directory if it doesn't exist
-          sudo mkdir -p /var/www/oneblockv1 &&
+          sudo mkdir -p /var/lib/geth &&
           # Set proper permissions
-          sudo chown -R $(whoami):$(whoami) /var/www/oneblockv1
+          sudo chown -R $(whoami):$(whoami) /var/lib/geth
         fi &&
-        
-        # Copy genesis.json from the repository to the instance
-        sudo cp /var/www/oneblockv1/genesis.json /var/www/oneblockv1/genesis.json &&
         
         # Initialize Geth with the genesis block if not already initialized
         if [ ! -f /root/.ethereum/geth/chaindata/LOCK ]; then
-          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /var/www/oneblockv1/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
+          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v $(pwd)/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
         fi &&
         
         # Stop any running container and remove it
@@ -88,7 +84,7 @@ jobs:
           -p 8545:8545 -p 30303:30303 \
           -e LICENSE_KEY=${{ secrets.DOCKER_LICENSE_KEY }} \
           ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --datadir /var/www/oneblockv1/datadir \
+          --datadir /var/lib/geth \
           --networkid 10 \
           --port 30303 \
           --http \
@@ -96,5 +92,3 @@ jobs:
           --http.addr 0.0.0.0 \
           --http.port 8545 \
           --syncmode 'full'"
-
-
