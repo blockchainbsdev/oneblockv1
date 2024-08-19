@@ -71,6 +71,11 @@ jobs:
           sudo chown -R $(whoami):$(whoami) /var/www/oneblockv1
         fi &&
         
+        # Initialize Geth with the genesis block
+        if [ ! -d /root/.ethereum/geth ]; then
+          sudo docker run --rm -v /root/.ethereum:/root/.ethereum ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /path/to/genesis.json
+        fi &&
+        
         # Stop any running container and remove it
         sudo docker stop oneblock || true &&
         sudo docker rm oneblock || true &&
@@ -87,6 +92,7 @@ jobs:
           --http.api admin,eth,net,web3 \
           --http.addr 0.0.0.0 \
           --http.port 8545"
+
 
 
 
