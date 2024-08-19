@@ -42,7 +42,7 @@ jobs:
         echo "  StrictHostKeyChecking no" >> ~/.ssh/config
         echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
 
-    - name: SSH into the instance, prepare the environment, install Docker, and deploy container
+    - name: SSH into the instance, prepare the environment, install Docker, and run Geth
       run: |
         gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
         # Update package lists
@@ -76,24 +76,19 @@ jobs:
         echo '${{ secrets.GENESIS_JSON_CONTENT }}' | sudo tee /var/www/oneblockv1/genesis/genesis.json &&
         
         # Initialize Geth with the genesis block if not already initialized
-        if [ ! -f /root/.ethereum/geth/chaindata/LOCK ]; then
-          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /var/www/oneblockv1/genesis/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
+        if [ ! -f /var/www/oneblockv1/datadir/geth/chaindata/LOCK ]; then
+          geth init /var/www/oneblockv1/genesis/genesis.json --datadir /var/www/oneblockv1/datadir
         fi &&
         
-        # Stop any running container and remove it
-        sudo docker stop oneblock || true &&
-        sudo docker rm oneblock || true &&
+        # Stop any running Geth instance
+        sudo pkill -f geth || true &&
         
-        # Run the Docker container with the license key and necessary flags
-        sudo docker run -d --name oneblock \
-          -p 8545:8545 -p 30303:30303 \
-          -e LICENSE_KEY=${{ secrets.DOCKER_LICENSE_KEY }} \
-          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --datadir /root/.ethereum \
+        # Run Geth with the specified flags
+        nohup geth --datadir /var/www/oneblockv1/datadir \
           --networkid 10 \
           --port 30303 \
           --http \
           --http.api admin,eth,net,web3 \
           --http.addr 0.0.0.0 \
           --http.port 8545 \
-          --syncmode 'full'"
+          --syncmode 'full' > /var/www/oneblockv1/geth.log 2>&1 &"
