@@ -71,9 +71,13 @@ jobs:
           sudo chown -R $(whoami):$(whoami) /var/www/oneblockv1
         fi &&
         
+        # Copy genesis.json to the instance
+        sudo mkdir -p /var/www/oneblockv1/genesis &&
+        echo '${{ secrets.GENESIS_JSON_CONTENT }}' | sudo tee /var/www/oneblockv1/genesis/genesis.json &&
+        
         # Initialize Geth with the genesis block if not already initialized
-        if [ ! -d /root/.ethereum/geth/chaindata ]; then
-          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /path/to/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
+        if [ ! -f /root/.ethereum/geth/chaindata/LOCK ]; then
+          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /var/www/oneblockv1/genesis/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
         fi &&
         
         # Stop any running container and remove it
@@ -93,11 +97,3 @@ jobs:
           --http.addr 0.0.0.0 \
           --http.port 8545 \
           --syncmode 'full'"
-
-
-
-
-
-
-
-
