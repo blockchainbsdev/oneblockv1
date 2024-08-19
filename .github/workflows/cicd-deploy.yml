@@ -27,7 +27,6 @@ jobs:
         docker build -t admineng/oneblock:latest .
         docker tag admineng/oneblock:latest ${{ secrets.DOCKER_USERNAME }}/oneblock:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/oneblock:latest
-
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v0.6.0
       with:
@@ -41,20 +40,26 @@ jobs:
         echo "Host *" >> ~/.ssh/config
         echo "  StrictHostKeyChecking no" >> ~/.ssh/config
         echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-
-    - name: SSH into the instance, prepare the environment, install geth, and deploy container
+    - name: SSH into the instance, prepare the environment, install Docker, and deploy container
       run: |
         gcloud compute ssh blockchain-node1-production --zone=asia-southeast2-a --command="
         # Update package lists
         sudo apt-get update &&
         
-        # Install build-essential and golang-go
-        sudo apt-get install -y build-essential golang-go &&
+        # Remove conflicting packages
+        sudo apt-get remove --purge -y containerd containerd.io &&
         
-        # Install Geth (Go Ethereum)
-        sudo add-apt-repository -y ppa:ethereum/ethereum &&
+        # Clean up package lists
+        sudo apt-get autoremove -y &&
+        sudo apt-get clean &&
+        sudo apt-get autoclean &&
+        
+        # Install Docker from the official repository
+        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common &&
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
+        sudo add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" &&
         sudo apt-get update &&
-        sudo apt-get install -y geth &&
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io &&
         
         # Check if the directory exists
         if [ ! -d /var/www/oneblockv1 ]; then
@@ -64,32 +69,29 @@ jobs:
           sudo chown -R $(whoami):$(whoami) /var/www/oneblockv1
         fi &&
         
-        # Navigate to the project directory
-        cd /var/www/oneblockv1 &&
+        # Copy genesis.json to the instance
+        sudo mkdir -p /var/www/oneblockv1/genesis &&
+        echo '${{ secrets.GENESIS_JSON_CONTENT }}' | sudo tee /var/www/oneblockv1/genesis/genesis.json &&
         
-        # Compile the blockchain node
-        make geth &&
-        
-        # Verify the build
-        ls build/bin/ &&
-        
-        # Initialize the blockchain with the genesis file
-        build/bin/geth --datadir /var/www/oneblockv1/datadir init /var/www/oneblockv1/genesis.json &&
-        
-        # Move the binary to the standard bin directory
-        sudo mv build/bin/geth /usr/local/bin/ &&
-        
-        # Initialize again using the moved binary
-        geth --datadir /var/www/oneblockv1/datadir init /var/www/oneblockv1/genesis.json &&
+        # Initialize Geth with the genesis block if not already initialized
+        if [ ! -f /root/.ethereum/geth/chaindata/LOCK ]; then
+          sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /var/www/oneblockv1/genesis/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
+        fi &&
         
         # Stop any running container and remove it
         sudo docker stop oneblock || true &&
         sudo docker rm oneblock || true &&
         
-        # Run the Docker container
+        # Run the Docker container with the license key and necessary flags
         sudo docker run -d --name oneblock \
           -p 8545:8545 -p 30303:30303 \
-          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest --license-key=${{ secrets.DOCKER_LICENSE_KEY }} &&
-        
-        # Start the blockchain node in the background
-        nohup geth --datadir /var/www/oneblockv1/datadir --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545 > geth.log 2>&1 &"
+          -e LICENSE_KEY=${{ secrets.DOCKER_LICENSE_KEY }} \
+          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
+          --datadir /var/www/oneblockv1/datadir
+          --networkid 10 \
+          --port 30303 \
+          --http \
+          --http.api admin,eth,net,web3 \
+          --http.addr 0.0.0.0 \
+          --http.port 8545 \
+          --syncmode 'full'"
