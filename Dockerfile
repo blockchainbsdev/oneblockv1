@@ -21,16 +21,15 @@ RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/bootnode
 FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates curl
-RUN apk add --no-cache openssl # quorum (6 may 2024): 3.1.4-r5 is the installed openssl version, want 3.1.4-r6 to get fix for CVE-2024-2511
+RUN apk add --no-cache openssl
+
 COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
 COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
 EXPOSE 8545 8546 30303 30303/udp
-ENTRYPOINT ["geth"]
 
-# Add some metadata labels to help programatic image consumption
-ARG COMMIT=""
-ARG VERSION=""
-ARG BUILDNUM=""
+# Environment variable for the license key
+ENV LICENSE_KEY=""
 
-LABEL commit="$COMMIT" version="$VERSION" buildnum="$BUILDNUM"
+ENTRYPOINT ["sh", "-c", "geth --license-key=${LICENSE_KEY}"]
+
