@@ -72,7 +72,7 @@ jobs:
         fi &&
         
         # Initialize Geth with the genesis block if not already initialized
-        if [ ! -f /root/.ethereum/geth/chaindata/LOCK ]; then
+        if [ ! -d /root/.ethereum/geth/chaindata ]; then
           sudo docker run --rm -v /root/.ethereum:/root/.ethereum -v /path/to/genesis.json:/genesis.json ${{ secrets.DOCKER_USERNAME }}/oneblock:latest init /genesis.json
         fi &&
         
@@ -93,6 +93,7 @@ jobs:
           --http.addr 0.0.0.0 \
           --http.port 8545 \
           --syncmode 'full'"
+
 
 
 
