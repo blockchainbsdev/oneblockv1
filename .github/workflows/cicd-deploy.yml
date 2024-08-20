@@ -12,6 +12,14 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
+    - name: Initialize and update submodules
+      run: git submodule update --init --recursive
+
+    - name: List files
+      run: ls -la
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -90,4 +98,5 @@ jobs:
           --http.addr 0.0.0.0 \
           --http.port 8545 \
           --syncmode 'full'"
+
 
