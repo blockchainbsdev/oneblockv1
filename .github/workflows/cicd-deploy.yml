@@ -62,12 +62,10 @@ jobs:
         sudo apt-get update &&
         sudo apt-get install -y docker-ce docker-ce-cli containerd.io &&
         
-        # Check if the directory exists
-        if [ ! -d /var/lib/geth ]; then
-          # Create the directory if it doesn't exist
-          sudo mkdir -p /var/lib/geth &&
-          # Set proper permissions
-          sudo chown -R $(whoami):$(whoami) /var/lib/geth
+        # Check if the directory exists and create it if necessary
+        if [ ! -d /root/.ethereum ]; then
+          sudo mkdir -p /root/.ethereum &&
+          sudo chown -R $(whoami):$(whoami) /root/.ethereum
         fi &&
         
         # Initialize Geth with the genesis block if not already initialized
@@ -84,7 +82,7 @@ jobs:
           -p 8545:8545 -p 30303:30303 \
           -e LICENSE_KEY=${{ secrets.DOCKER_LICENSE_KEY }} \
           ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --datadir /usr/bin/geth \
+          --datadir /root/.ethereum \
           --networkid 10 \
           --port 30303 \
           --http \
@@ -92,3 +90,4 @@ jobs:
           --http.addr 0.0.0.0 \
           --http.port 8545 \
           --syncmode 'full'"
+
