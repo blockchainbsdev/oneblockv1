@@ -106,4 +106,3 @@ jobs:
           --http.port 8545 \
           --syncmode 'full' \
           --istanbul"
-
