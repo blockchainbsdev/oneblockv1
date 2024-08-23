@@ -28,8 +28,8 @@ COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
 # Copy configuration files
 COPY datadir/static-nodes.json /root/.ethereum/static-nodes.json
-COPY datadir/permission-config.json /root/.ethereum/permission-config.json
-COPY genesis.json /root/.ethereum/genesis.json  # Adjust path if needed
+COPY datadir/permission-config.json /root/.ethereum/permission-config.json # Ensure this file exists
+COPY genesis.json /root/.ethereum/genesis.json # Ensure the genesis file is copied if needed
 
 # Expose necessary ports
 EXPOSE 8545 8546 30303 30303/udp
