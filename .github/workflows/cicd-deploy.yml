@@ -93,7 +93,7 @@ jobs:
         sudo docker stop oneblock || true &&
         sudo docker rm oneblock || true &&
         
-        # Run the Docker container without the license key
+        # Run the Docker container with the correct consensus flag
         sudo docker run -d --name oneblock \
           -p 8545:8545 -p 30303:30303 \
           ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
@@ -104,4 +104,6 @@ jobs:
           --http.api admin,eth,net,web3 \
           --http.addr 0.0.0.0 \
           --http.port 8545 \
-          --syncmode 'full'"
+          --syncmode 'full' \
+          --istanbul"
+
