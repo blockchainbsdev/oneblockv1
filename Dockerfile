@@ -1,38 +1,47 @@
-# Support setting various labels on the final image
-ARG COMMIT=""
-ARG VERSION=""
-ARG BUILDNUM=""
-
 # Build Geth in a stock Go builder container
 FROM golang:1.22-alpine as builder
 
+# Install necessary packages for building
 RUN apk add --no-cache gcc musl-dev linux-headers git
 
-# Get dependencies - will also be cached if we won't change go.mod/go.sum
-COPY go.mod /go-ethereum/
-COPY go.sum /go-ethereum/
-RUN cd /go-ethereum && go mod download
+# Set up working directory
+WORKDIR /go-ethereum
 
-ADD . /go-ethereum
-RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/geth
-RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/bootnode
+# Get dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code and build
+COPY . .
+RUN go run build/ci.go install -static ./cmd/geth
+RUN go run build/ci.go install -static ./cmd/bootnode
 
 # Pull Geth into a second stage deploy alpine container
 FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates curl
-RUN apk add --no-cache openssl
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates curl openssl
 
+# Copy the Geth binaries from the builder stage
 COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
 COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
-# Copy static-nodes.json and permission-config.json to the appropriate directory in the container
+# Copy configuration files
 COPY datadir/static-nodes.json /root/.ethereum/static-nodes.json
 COPY datadir/permission-config.json /root/.ethereum/permission-config.json
 
+# Expose necessary ports
 EXPOSE 8545 8546 30303 30303/udp
 
-ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545 --syncmode 'full' --raft"]
+# Set environment variables for dynamic configuration
+ENV NETWORK_ID=10
+ENV HTTP_PORT=8545
+ENV PORT=30303
+ENV RAFT=true
+
+# Default entry point for the container
+ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid $NETWORK_ID --port $PORT --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port $HTTP_PORT --syncmode 'full' --raft=$RAFT"]
+
 
 
 
