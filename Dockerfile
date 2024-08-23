@@ -28,6 +28,7 @@ COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
 EXPOSE 8545 8546 30303 30303/udp
 
-ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545 --istanbul"]
+ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545 --syncmode 'full' --istanbul"]
+
 
 
