@@ -89,14 +89,9 @@ jobs:
         # Run the Docker container with the correct consensus flag
         sudo docker run -d --name oneblock \
           -p 8545:8545 -p 30303:30303 \
-          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
-          --datadir /root/.ethereum \
-          --networkid 10 \
-          --port 30303 \
-          --http \
-          --http.api admin,eth,net,web3 \
-          --http.addr 0.0.0.0 \
-          --http.port 8545 \
-          --syncmode 'full' \
-          --raft \
-          --permissioned"
+          -e NETWORK_ID=10 \
+          -e HTTP_PORT=8545 \
+          -e PORT=30303 \
+          -e RAFT=true \
+          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest"
+
