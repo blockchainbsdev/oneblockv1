@@ -93,10 +93,9 @@ jobs:
         sudo docker stop oneblock || true &&
         sudo docker rm oneblock || true &&
         
-        # Run the Docker container with the license key and necessary flags
+        # Run the Docker container without the license key
         sudo docker run -d --name oneblock \
           -p 8545:8545 -p 30303:30303 \
-          -e LICENSE_KEY=${{ secrets.DOCKER_LICENSE_KEY }} \
           ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
           --datadir /root/.ethereum \
           --networkid 10 \
