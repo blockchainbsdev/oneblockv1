@@ -26,12 +26,14 @@ RUN apk add --no-cache openssl
 COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
 COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
-# Copy static-nodes.json to the appropriate directory in the container
+# Copy static-nodes.json and permission-config.json to the appropriate directory in the container
 COPY datadir/static-nodes.json /root/.ethereum/static-nodes.json
+COPY datadir/permission-config.json /root/.ethereum/permission-config.json
 
 EXPOSE 8545 8546 30303 30303/udp
 
 ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid 10 --port 30303 --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port 8545 --syncmode 'full' --raft"]
+
 
 
 
