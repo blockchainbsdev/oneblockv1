@@ -28,8 +28,7 @@ COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
 # Copy configuration files
 COPY datadir/static-nodes.json /root/.ethereum/static-nodes.json
-COPY datadir/permission-config.json /root/.ethereum/permission-config.json # Ensure this file exists
-COPY genesis.json /root/.ethereum/genesis.json # Ensure the genesis file is copied if needed
+COPY datadir/permission-config.json /root/.ethereum/permission-config.json
 
 # Expose necessary ports
 EXPOSE 8545 8546 30303 30303/udp
@@ -41,4 +40,5 @@ ENV PORT=30303
 ENV RAFT=true
 
 # Default entry point for the container
-ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid $NETWORK_ID --port $PORT --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port $HTTP_PORT --syncmode 'full' --raft=$RAFT"]
+ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid $NETWORK_ID --port $PORT --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port $HTTP_PORT --syncmode 'full' --raft --raftport 50400"]
+
