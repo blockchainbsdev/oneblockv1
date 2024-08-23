@@ -40,11 +40,4 @@ ENV PORT=30303
 ENV RAFT=true
 
 # Default entry point for the container
-ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid $NETWORK_ID --port $PORT --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port $HTTP_PORT --syncmode 'full' --raft=$RAFT"]
-
-
-
-
-
-
-
+ENTRYPOINT ["sh", "-c", "geth --datadir /root/.ethereum --networkid $NETWORK_ID --port $PORT --http --http.api admin,eth,net,web3 --http.addr 0.0.0.0 --http.port $HTTP_PORT --syncmode 'full' --raft --raftport 50400"]
