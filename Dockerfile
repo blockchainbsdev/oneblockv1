@@ -28,13 +28,13 @@ COPY --from=builder /go-ethereum/build/bin/bootnode /usr/local/bin/
 
 # Copy configuration files
 COPY datadir/static-nodes.json /root/.ethereum/static-nodes.json
-COPY datadir/permission-config.json /root/.ethereum/permission-config.json
+#COPY datadir/permission-config.json /root/.ethereum/permission-config.json
 
 # Expose necessary ports
 EXPOSE 8545 8546 30303 30303/udp
 
 # Set environment variables for dynamic configuration
-ENV NETWORK_ID=10
+ENV NETWORK_ID=1
 ENV HTTP_PORT=8545
 ENV PORT=30303
 ENV RAFT=true
