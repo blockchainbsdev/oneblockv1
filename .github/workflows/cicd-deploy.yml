@@ -74,14 +74,24 @@ jobs:
 
         sudo docker stop oneblock || true &&
         sudo docker rm oneblock || true &&
-
         sudo docker run -d --name oneblock \
-          -p 8545:8545 -p 30303:30303 \
-          -e NETWORK_ID=10 \
+          -p 8545:8545 -p 30303:30303 -p 8546:8546 \
+          -e NETWORK_ID=1 \
           -e HTTP_PORT=8545 \
+          -e WS_PORT=8546 \
           -e PORT=30303 \
-          -e RAFT=true \
-          -v /root/.ethereum:/root/.ethereum \
-          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest"
-
-
+          -v /path/to/bootnode/datadir:/root/.ethereum \
+          ${{ secrets.DOCKER_USERNAME }}/oneblock:latest \
+          --networkid 1 \
+          --port 30303 \
+          --http \
+          --http.api admin,eth,net,web3,personal \
+          --http.addr 0.0.0.0 \
+          --http.port 8545 \
+          --http.corsdomain \"*\" \
+          --ws \
+          --ws.addr 0.0.0.0 \
+          --ws.port 8546 \
+          --ws.origins \"*\" \
+          --verbosity 3
+        "
